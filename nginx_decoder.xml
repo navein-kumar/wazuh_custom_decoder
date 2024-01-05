@@ -1,0 +1,64 @@
+log
+---
+timestamp="05/Jan/2024:15:32:59 +0530" server="utilitiesintegrated.in" dest_port="443" dest_ip="172.18.0.6" src="162.158.162.37" src_ip="162.158.162.37" user="-" site="admin.utilitiesintegrated.in" version="HTTP/2.0" id="200" bytes_out="80509" bytes_in="-" http_referer="https://utilitiesintegrated.in/vendor/fontawesome-free/css/all.min.css" http_user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0" nginx_version="1.21.4" http_x_forwarded_for="115.99.26.86" http_x_header="-" uri_query="-" url="/vendor/fontawesome-free/webfonts/fa-solid-900.woff2" http_method="GET" response_time="-" cookie="cf_clearance=_Ey7Ue29xZOYd1yj6dYLemXPdkcvM0nqybjx.sg.c28-1704044766-0-2-f402ae5f.e02e81c0.c8afc4e1-0.2.1704044766; utility_session=eyJpdiI6Im5Fbk96ZmhSY1JCRGtNMmZIQThaVXc9PSIsInZhbHVlIjoiZzB4bFZCaUh3K3FQd0U3ZjV3QkxjdEJkaWhzdGdHMDRSVFFoQUdCekxUTVNrNUlqUE8rT1pqam1UVUVLME5PTzVYTDRHU01Ubmp2emRwcHU0ZHd2S085QmNHa1FYV09xVnZlc3lGUWVLUXJhUEQ5R1NUOUVaNVJpeWNzdDZaSVUiLCJtYWMiOiIyZGQyNzI3YTJmNDA0MmRjODgyOWI3YjM5NDkyYmUyMjEzNDYyZWM4ZGJhNGQ2NTZhNWM2NGRmNWQwZWU4YTkzIn0%3D; XSRF-TOKEN=eyJpdiI6IkFNTkJ1R1JmSGVPWkZEVk9NVUlENGc9PSIsInZhbHVlIjoiSmV5dzlxY04vcHZNeHZiRnNtVWg1R3BRaHdmU3pPU0FjRklQYzdvSkVLZk92a2l4bUdXKzlMakFKZWFPcFR3RWUxdlE0K3NycGZIcVVKU2lVLzh2bEs4NWF6ZzRnWWpwNm5YQ3d2SXVlbitPaGVxK3hReVpPZys5a3VCZlVKbngiLCJtYWMiOiIzNGM5MmJmYTQyNzNiYzdmY2YxNTgxYjY2MjdjNTlmMmU3ZTY3ZDJjZjk5OTQ1MzhkYmU2ZjlmMGI4MWM5NTBhIn0%3D" request_time="0.000" category="font/woff2" postdata="-"
+
+---decoder-----
+
+<decoder name="nginx-waf">
+    <prematch>^timestamp</prematch>
+</decoder>
+
+<decoder name="nginx-waf1">
+  <parent>nginx-waf</parent>
+  <regex>server="\S+" dest_port="(\d+)" dest_ip="(\S+)"</regex>
+  <order>dest_port,dest_ip</order>
+</decoder>
+<decoder name="nginx-waf1">
+  <parent>nginx-waf</parent>
+  <regex>src_ip="(\S+)" user="\S+" site="(\S+)" version="(\S+)" id="(\d+)"</regex>
+  <order>srcip,domain,version,id</order>
+</decoder>
+<decoder name="nginx-waf1">
+  <parent>nginx-waf</parent>
+  <regex>http_referer="(\.*)" http_user_agent="(\.*)"</regex>
+  <order>Referer,Useragent</order>
+</decoder>
+<decoder name="nginx-waf1">
+  <parent>nginx-waf</parent>
+  <regex>uri_query="(\.*)" url="(\.*)" http_method="(\S+)"</regex>
+  <order>uri_query,url,protocol</order>
+</decoder>
+<decoder name="nginx-waf1">
+  <parent>nginx-waf</parent>
+  <regex>category="(\.*)" postdata="(\.*)"</regex>
+  <order>type,postdata</order>
+</decoder>
+
+---rules---
+
+<group name="web,accesslog,">
+ 
+  <rule id="100105" level="2">
+  <decoded_as>nginx-waf</decoded_as>
+  <description>nginx-waf decoded</description>
+</rule>
+    <rule id="100106" level="3">
+    <if_sid>100105</if_sid>
+    <id>^2|^3|^4|^5</id>
+    <description>Web Access Request from $(srcip)</description>
+  </rule>
+    <rule id="100107" level="0">
+    <if_sid>100105</if_sid>
+    <url>.jpg$|.gif$|favicon.ico$|.png$|robots.txt$|.css$|.js$|.jpeg$|.woff2$</url>
+    <compiled_rule>is_simple_http_request</compiled_rule>
+    <description>Ignored extensions on 400 error codes.</description>
+  </rule>
+  
+    <rule id="100108" level="0">
+    <if_sid>100105</if_sid>
+    <match>siem.codesec.in</match>
+    <description>Ignored extensions on 400 error codes.</description>
+  </rule>
+  
+</group>
+
