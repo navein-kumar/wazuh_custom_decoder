@@ -1,0 +1,24 @@
+https://github.com/wazuh/wazuh/issues/5448
+----
+<decoder name="tacacsgui-auth">
+    <prematch>^\S+ \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d </prematch>
+</decoder>
+
+<decoder name="tacacs-authentication">
+  <parent>tacacsgui-auth</parent>
+  <regex>^\S+ (\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)</regex>
+  <order>datetime</order>
+</decoder>
+
+<decoder name="tacacs-authentication">
+  <parent>tacacsgui-auth</parent>
+  <regex>(\d+.\d+.\d+.\d+)\|!\|(\w*)\|!\|(tty\d*)\|!\|\d+.\d+.\d+.\d+\|!\|(\w*\s\w*\s\w*)</regex>
+  <order>tacacs-ip, user, terminal, login-sucess-failed</order>
+</decoder>
+---
+<group name="local,syslog,">
+  <rule id="222000" level="5">
+     <decoded_as>tacacsgui-auth</decoded_as>
+     <description>Tacacs messages grouped.</description>
+  </rule>
+</group>
